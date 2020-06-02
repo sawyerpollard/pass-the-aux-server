@@ -9,22 +9,24 @@ const WebSocket = require('ws');
 const { Router } = require('./router.js');
 const { PageHandler } = require('./pagehandler.js');
 const { NodeSpotify } = require('./nodespotify.js');
+const { SessionManager } = require('./sessionmanager.js');
 
 
 const router = new Router();
 const pagehandler = new PageHandler();
+const sessman = new SessionManager();
 const nodespotify = new NodeSpotify(process.env.SPOTIFY_ACCESS_TOKEN);
 
 pagehandler.addPage(path.join(__dirname, 'public/index.html'));
 pagehandler.addPage(path.join(__dirname, 'public/404.html'));
 
-router.addRoute('/', (request, response, parsedUrl) => {
+router.handle('/', (request, response, parsedUrl) => {
     response.writeHead(200, { 'Content-Type': 'text/html' });
     response.write(pagehandler.getPage('index.html').data);
     return response;
 });
 
-router.addRoute('/login', (request, response, parsedUrl) => {
+router.handle('/login', (request, response, parsedUrl) => {
     const state = parsedUrl.searchParams.get('state');
     if (!state) {
         throw new Error('No authorization state!');
@@ -34,9 +36,15 @@ router.addRoute('/login', (request, response, parsedUrl) => {
     return response;
 });
 
-router.addRoute('/callback', (request, response, parsedUrl) => {
-    console.log(parsedUrl.searchParams);
-    response.writeHead(301, { Location: router.findRoute('/').path });
+router.handle('/callback', (request, response, parsedUrl) => {
+    const data = {
+        spotify: {
+            accessToken: parsedUrl.searchParams.get('code'),
+        },
+    };
+
+    const id = sessman.createSession(data).sessionId;
+    response.writeHead(301, { Location: `/?session_id=${sessman.readSession(id).sessionId}` });
     return response;
 });
 
@@ -55,13 +63,11 @@ server.on('request', (request, response) => {
     try {
         response = router.resolve(parsedUrl.pathname, request, response, parsedUrl).result;
         response.end();
-    }
-    catch (error) {
+    } catch (error) {
         console.error(error);
         response.writeHead(404, { 'Content-Type': 'text/html' });
         response.write(pagehandler.getPage('404.html').data);
         response.end();
-        return;
     }
 });
 

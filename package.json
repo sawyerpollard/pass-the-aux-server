@@ -24,6 +24,7 @@
   "dependencies": {
     "dotenv": "^8.2.0",
     "node-fetch": "^2.6.0",
+    "uuid": "^8.1.0",
     "ws": "^7.3.0"
   }
 }

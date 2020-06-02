@@ -3,22 +3,6 @@ const url = require('url');
 const fetch = require('node-fetch');
 
 class NodeSpotify {
-    constructor(accessToken) {
-        if (accessToken) {
-            this.accessToken = accessToken;
-        } else {
-            this._accessToken = null;
-        }
-    }
-
-    get accessToken() {
-        return this._accessToken;
-    }
-
-    set accessToken(accessToken) {
-        this._accessToken = accessToken;
-    }
-
     static createAuthorizeUrl(clientId, redirectUri, state, scopeArray) {
         const endpoint = {
             pathname: '/authorize',
@@ -80,7 +64,7 @@ class NodeSpotify {
         return json;
     }
 
-    async search(query, type, market, limit) {
+    static async search(query, type, market, limit, accessToken) {
         const endpoint = {
             pathname: '/v1/search',
             hostname: 'api.spotify.com',
@@ -89,7 +73,7 @@ class NodeSpotify {
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${this.accessToken}`,
+                'Authorization': `Bearer ${accessToken}`,
             },
         };
 

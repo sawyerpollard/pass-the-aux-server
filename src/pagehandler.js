@@ -1,5 +1,3 @@
-'use strict';
-
 const path = require('path');
 const fs = require('fs');
 
@@ -12,13 +10,6 @@ class PageHandler {
         }
     }
 
-    pageTemplate = {
-        name: null,
-        pathname: null,
-        extension: null,
-        data: null
-    };
-
     addPage(pathname) {
         const pathObject = path.parse(path.resolve(pathname));
 
@@ -26,32 +17,12 @@ class PageHandler {
         const extension = pathObject.ext.substring(1);
         const data = fs.readFileSync(pathname).toString();
 
-        const page = Object.create(this.pageTemplate, {
-            name: {
-                value: name,
-                writable: true,
-                enumerable: true,
-                configurable: true
-            },
-            pathname: {
-                value: pathname,
-                writable: true,
-                enumerable: true,
-                configurable: true
-            },
-            extension: {
-                value: extension,
-                writable: true,
-                enumerable: true,
-                configurable: true
-            },
-            data: {
-                value: data,
-                writable: true,
-                enumerable: true,
-                configurable: true
-            }
-        });
+        const page = {
+            name,
+            pathname,
+            extension,
+            data,
+        };
 
         this.pages.push(page);
     }
@@ -64,19 +35,14 @@ class PageHandler {
     }
 
     getPage(name) {
-        const page = this.pages.find(page => page.name === name);
-        if (page) {
-            return page;
-        } else {
-            throw new ReferenceError('404');
+        const foundPage = this.pages.find((page) => page.name === name);
+        if (foundPage) {
+            return foundPage;
         }
-    }
-
-    resolvePath(pathname) {
-        return path.resolve(pathname);
+        throw new ReferenceError('404');
     }
 }
 
 module.exports = {
-    PageHandler
+    PageHandler,
 };
